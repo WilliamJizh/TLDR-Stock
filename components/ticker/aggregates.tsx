@@ -1,48 +1,48 @@
 "use client";
 
 import { Aggregates, TimeSpan, tickerAggregates } from "@/actions/polygon";
-import { Tabs, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
-import { time } from "console";
+import { convertDateToStringFormat, convertTimeToAMPM } from "@/utils/time";
 import { useEffect, useState } from "react";
 import {
-  LineChart,
-  Line,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  ReferenceArea,
+  Tooltip,
+  TooltipProps,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  AreaChart,
-  Area,
 } from "recharts";
+import {
+  NameType,
+  ValueType,
+} from "recharts/types/component/DefaultTooltipContent";
 
 export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
   const [aggregates, setAggregates] = useState<Aggregates[]>([]);
   const [timeSpan, setTimeSpan] = useState<TimeSpan>("1D");
+  const [uniqueTicks, setUniqueTicks] = useState<number[]>([]);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [startPoint, setStartPoint] = useState<Aggregates>();
+  const [endPoint, setEndPoint] = useState<Aggregates>();
 
   useEffect(() => {
     tickerAggregates(ticker, timeSpan).then((data) => {
       setAggregates(data);
+      setUniqueTicks(getUniqueTicks(data));
     });
   }, [timeSpan]);
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    const minutesFormatted = minutes < 10 ? "0" + minutes : minutes;
 
     if (timeSpan === "1D") {
-      return `${hours}:${minutesFormatted} ${ampm}`;
+      return convertTimeToAMPM(date);
     } else {
-      return `${date.getMonth() + 1}/${date.getDate()}`;
+      return convertDateToStringFormat(date);
     }
   };
-
-  console.log(aggregates);
 
   const TimeSpanSelection = () => {
     return (
@@ -108,8 +108,89 @@ export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
       return Math.min(acc, curr.c);
     }, max);
 
-    const offset = (max - min) * 0.1;
+    const offset = (max - min) * 0.5;
     return [min - offset, max + offset];
+  };
+
+  const getUniqueTicks = (aggregates: Aggregates[]) => {
+    const tickMap = new Map<string, number>(); // Use a Map to track the first unique timestamp for each formatted date
+
+    aggregates.forEach((aggregate) => {
+      const formattedTick = formatDate(aggregate.t as number);
+      // Only add the timestamp to the map if the formatted date hasn't been added yet
+      if (!tickMap.has(formattedTick)) {
+        tickMap.set(formattedTick, aggregate.t as number);
+      }
+    });
+    // Convert the values of the map to an array, which will be the original timestamps of the first non-duplicate dates
+    return Array.from(tickMap.values());
+  };
+  // Start selection
+  const handleMouseDown = (e: any) => {
+    console.log(e);
+    if (e) {
+      setIsSelecting(true);
+      setStartPoint(e.activePayload[0].payload);
+      setEndPoint(e.activePayload[0].payload); // Reset endpoint on new selection start
+    }
+  };
+
+  // Update selection
+  const handleMouseMove = (e: any) => {
+    if (isSelecting && e) {
+      const currEndpoint = e.activePayload[0].payload as Aggregates;
+      setEndPoint(currEndpoint);
+      console.log(`Selected from ${startPoint} to ${currEndpoint}`); // Here you can do your logic or calculation
+      const diffPercantage = calculateDiffPercentage(
+        startPoint?.c as number,
+        currEndpoint.c
+      );
+      console.log(diffPercantage);
+    }
+  };
+
+  // End selection
+  const handleMouseUp = () => {
+    setIsSelecting(false);
+  };
+
+  // Calculate the rate difference in percentage
+  const calculateDiffPercentage = (start: number, end: number) => {
+    const percentage = ((end - start) / start) * 100;
+    // Round to 2 decimal places, if it's positive add a '+' sign, otherwise add a '-'
+    return `${percentage > 0 ? "+" : ""}${percentage.toFixed(2)}%`;
+  };
+
+  const renderTooltipContent = (props: TooltipProps<ValueType, NameType>) => {
+    const { active, payload, label } = props;
+    if (active && payload) {
+      const currentData = payload[0].payload;
+      let diffPercentage = "";
+      if (isSelecting && startPoint) {
+        diffPercentage = calculateDiffPercentage(startPoint.c, currentData.c);
+      }
+
+      return (
+        <div
+          className="custom-tooltip"
+          style={{
+            backgroundColor: "#fff",
+            padding: "10px",
+            border: "1px solid #ccc",
+          }}
+        >
+          <p>{formatDate(label)}</p>
+          <p>Value: {currentData.c}</p>
+          {isSelecting && <p>Difference: {diffPercentage}</p>}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const formatStockIndex = (index: number) => {
+    return index.toFixed(0);
   };
 
   return (
@@ -127,6 +208,9 @@ export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
             left: 20,
             bottom: 5,
           }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={isSelecting ? handleMouseMove : undefined}
+          onMouseUp={handleMouseUp}
         >
           <defs>
             <linearGradient id="colorC" x1="0" y1="0" x2="0" y2="1">
@@ -135,10 +219,17 @@ export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="t" tickFormatter={formatDate} />
-          <YAxis domain={calcRange(aggregates)} />
-          <Tooltip labelFormatter={formatDate} />
-          <Legend />
+          <XAxis
+            dataKey="t"
+            type="category"
+            ticks={uniqueTicks}
+            tickFormatter={formatDate}
+          />
+          <YAxis
+            domain={calcRange(aggregates)}
+            tickFormatter={formatStockIndex}
+          />
+          <Tooltip labelFormatter={formatDate} content={renderTooltipContent} />
           <Area
             type="monotone"
             dataKey="c"
@@ -146,6 +237,15 @@ export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
             fillOpacity={1}
             fill="url(#colorC)"
           />
+          {isSelecting && startPoint && endPoint && (
+            <ReferenceArea
+              x1={startPoint.t}
+              x2={endPoint.t}
+              strokeOpacity={0.3}
+              fill="red"
+              fillOpacity={0.3}
+            />
+          )}
         </AreaChart>
       )}
       <TimeSpanSelection />
