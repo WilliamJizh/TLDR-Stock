@@ -1,4 +1,5 @@
 import { NewsArticle } from "@/actions/polygon";
+import { Card } from "../ui/card";
 
 export const NewsDisplay = ({ articles }: { articles: NewsArticle[] }) => {
   const parseUTCDate = (utcString: string) => {
@@ -42,13 +43,7 @@ export const NewsDisplay = ({ articles }: { articles: NewsArticle[] }) => {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {articles.map((article) => (
-        <a
-          key={article.id}
-          href={article.article_url}
-          target="_blank"
-          rel="noreferrer"
-          className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border"
-        >
+        <Card key={article.id} className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <img
@@ -60,11 +55,13 @@ export const NewsDisplay = ({ articles }: { articles: NewsArticle[] }) => {
                 {article.publisher.name}
               </h3>
             </div>
-            <p className="text-sm text-gray-500">{parseUTCDate(article.published_utc)}</p>
+            <p className="text-sm text-gray-500">
+              {parseUTCDate(article.published_utc)}
+            </p>
           </div>
           <h2 className="mt-2 text-xl font-semibold">{article.title}</h2>
           <p className="mt-2 text-sm text-gray-600">{article.description}</p>
-        </a>
+        </Card>
       ))}
     </div>
   );

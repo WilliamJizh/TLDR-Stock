@@ -7,9 +7,9 @@ import Image from "next/image";
 export default async function Page({ params }: { params: { slug: string } }) {
   const tickerInfo = await tickerNews(params.slug);
   return (
-    <>
+    <div className="grid gap-10 p-4">
       <AggregateDisplay ticker={params.slug} />
-      <NewsDisplay articles={tickerInfo} />
-    </>
+      <NewsDisplay articles={tickerInfo}/>
+    </div>
   );
 }

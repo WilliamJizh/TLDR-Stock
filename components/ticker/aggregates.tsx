@@ -18,6 +18,8 @@ import {
   NameType,
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent";
+import { Card } from "../ui/card";
+import { Button } from "../ui/button";
 
 export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
   const [aggregates, setAggregates] = useState<Aggregates[]>([]);
@@ -46,56 +48,15 @@ export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
 
   const TimeSpanSelection = () => {
     return (
-      <div className="flex space-x-2 py-2 px-4 bg-gray-100 rounded-lg">
-        <button
-          className="px-3 py-1 rounded text-white bg-blue-500 hover:bg-blue-700"
-          onClick={() => setTimeSpan("1D")}
-        >
-          1D
-        </button>
-        <button
-          className="px-3 py-1 rounded text-white bg-blue-500 hover:bg-blue-700"
-          onClick={() => setTimeSpan("5D")}
-        >
-          5D
-        </button>
-        <button
-          className="px-3 py-1 rounded text-white bg-blue-500 hover:bg-blue-700"
-          onClick={() => setTimeSpan("1M")}
-        >
-          1M
-        </button>
-        <button
-          className="px-3 py-1 rounded text-white bg-blue-500 hover:bg-blue-700"
-          onClick={() => setTimeSpan("6M")}
-        >
-          6M
-        </button>
-        <button
-          className="px-3 py-1 rounded text-white bg-blue-500 hover:bg-blue-700"
-          onClick={() => setTimeSpan("YTD")}
-        >
-          YTD
-        </button>
-        <button
-          className="px-3 py-1 rounded text-white bg-blue-500 hover:bg-blue-700"
-          onClick={() => setTimeSpan("1Y")}
-        >
-          1Y
-        </button>
-        <button
-          className="px-3 py-1 rounded text-white bg-blue-500 hover:bg-blue-700"
-          onClick={() => setTimeSpan("5Y")}
-        >
-          5Y
-        </button>
-        <button
-          className="px-3 py-1 rounded text-white bg-blue-500 hover:bg-blue-700"
-          onClick={() => setTimeSpan("MAX")}
-        >
-          MAX
-        </button>
-      </div>
+      <Card className="flex space-x-2 py-2 px-4 ">
+        <Button onClick={() => setTimeSpan("1D")}>1D</Button>
+        <Button onClick={() => setTimeSpan("5D")}>5D</Button>
+        <Button onClick={() => setTimeSpan("1M")}>1M</Button>
+        <Button onClick={() => setTimeSpan("6M")}>6M</Button>
+        <Button onClick={() => setTimeSpan("YTD")}>YTD</Button>
+        <Button onClick={() => setTimeSpan("1Y")}>1Y</Button>
+        <Button onClick={() => setTimeSpan("5Y")}>5Y</Button>
+      </Card>
     );
   };
 
@@ -194,7 +155,7 @@ export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
   };
 
   return (
-    <div className="p-4 bg-white shadow-lg rounded-lg">
+    <Card className="p-4">
       {aggregates && aggregates?.length === 0 ? (
         <div>Loading...</div>
       ) : (
@@ -249,6 +210,6 @@ export const AggregateDisplay = ({ ticker }: { ticker: string }) => {
         </AreaChart>
       )}
       <TimeSpanSelection />
-    </div>
+    </Card>
   );
 };

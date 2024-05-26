@@ -1,12 +1,11 @@
 "use client";
 
-
 import {
   Command,
   CommandEmpty,
   CommandInput,
   CommandItem,
-  CommandList
+  CommandList,
 } from "@/components/ui/command";
 
 import { StockInfo, searchAllTickers } from "@/actions/polygon";
@@ -18,7 +17,7 @@ export function HomeSearch() {
   const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<StockInfo[]>([]);
-  const [timerId, setTimerId] = useState(null);
+  const [timerId, setTimerId] = useState<NodeJS.Timeout>();
 
   const handleSearchChange = async (e: ChangeEvent<HTMLInputElement>) => {
     console.log(e.target.value);
@@ -26,7 +25,7 @@ export function HomeSearch() {
       setSearchSuggestionOpen(false);
     }
 
-    const newTimerId = setTimeout(() => {
+    const newTimerId: NodeJS.Timeout = setTimeout(() => {
       if (e.target.value.length > 0) {
         setSearchSuggestionOpen(true);
         querySuggestion(e.target.value);
@@ -45,7 +44,9 @@ export function HomeSearch() {
   }, [timerId]);
 
   const querySuggestion = async (search: string) => {
-    const result = await searchAllTickers({ search: search });
+    const result = await searchAllTickers({
+      search: search
+    });
     console.log(result);
     setSearchSuggestions(result);
   };
@@ -57,26 +58,24 @@ export function HomeSearch() {
           placeholder="Type a command or search..."
           onChangeCapture={handleSearchChange}
         />
-        <CommandEmpty>
-          <span className="text-gray-400">No results found.</span>
-        </CommandEmpty>
         {searchSuggestionOpen && (
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
-            {searchSuggestions && searchSuggestions.map((suggestion) => {
-              console.log(suggestion);
-              return (
-                <CommandItem key={suggestion.ticker}>
-                  <Link
-                    className="flex flex-col w-full"
-                    href={`ticker/${suggestion.ticker}`}
-                  >
-                    <span className="font-bold">{suggestion.ticker}</span>
-                    <span>{suggestion.name}</span>
-                  </Link>
-                </CommandItem>
-              );
-            })}
+            {searchSuggestions &&
+              searchSuggestions.map((suggestion) => {
+                console.log(suggestion);
+                return (
+                  <CommandItem key={suggestion.ticker}>
+                    <Link
+                      className="flex flex-col w-full"
+                      href={`ticker/${suggestion.ticker}`}
+                    >
+                      <span className="font-bold">{suggestion.ticker}</span>
+                      <span>{suggestion.name}</span>
+                    </Link>
+                  </CommandItem>
+                );
+              })}
           </CommandList>
         )}
       </Command>

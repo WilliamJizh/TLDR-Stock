@@ -48,7 +48,7 @@ export const searchAllTickers = async (query: QueryVariables) => {
     active: query.active,
     order: query.order,
     limit: 5,
-    sort: "ticker",
+    sort: "primary_exchange",
     apiKey: process.env.NEXT_PUBLIC_POLYGON_API_KEY,
   };
 
